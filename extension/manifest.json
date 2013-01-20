@@ -1,0 +1,23 @@
+{
+    "manifest_version": 2,
+    "name": "Rdio Enhancements",
+    "version": "0.0.1",
+    "description": "Rdio Enhancements - LastFM, Bigger Now Playing, etc...",
+    "permissions": [
+      "http://ws.audioscrobbler.com/*"
+    ],
+    "icons": {
+        "48" : "rdioPlus48.png",
+        "128" : "rdioPlus48.png"
+    },
+  "background" : {
+      "scripts": ["last_fm.js"]
+  },
+  "content_scripts": [
+    {
+        "matches": ["http://www.rdio.com/*"],
+        "js" : ["contentscript.js"]
+    }
+  ],
+  "web_accessible_resources": ["lastfm.png"]
+}
