@@ -2,7 +2,8 @@
 var lastArtist = null,
     playFooter, // = document.querySelector('.App_PlayerFooter');
     nowPlayingArtist, //playFooter.querySelector('artist_title');
-    similarArtistList;
+    similarArtistList,
+    lastFMLink;
 
 function lastFMResponse(data) {
     if (data.similarartists.artist) {
@@ -42,6 +43,8 @@ function pollNowPlaying() {
     var currentArtist = nowPlayingArtist.innerText;
     if (currentArtist && lastArtist != currentArtist) {
         chrome.extension.sendRequest({ 'action': 'fetchSimilarArtists', 'artist': currentArtist }, lastFMResponse);
+        lastFMLink.href = 'http://www.last.fm/music/' + currentArtist;
+
         lastArtist = currentArtist;
     }
 }
@@ -73,28 +76,49 @@ var initLoop = window.setInterval(function (e) {
 
         // During startup, create the element which will host our 'Similar Artists' results
         var similarArtistsBox = document.createElement('div');
+        similarArtistsBox.setAttribute('style', 'padding: 8px; background: #E5E5E5; border-radius: 3px 3px; overflow: auto;');
         similarArtistsBox.className = 'section';
 
         // Append it below 'Playlists'
         var targetElem = document.querySelector('.scroll_content');
         targetElem.appendChild(similarArtistsBox);
 
+        // Add last.fm logo
+        var imgLastFM = document.createElement('img');
+        imgLastFM.src = chrome.extension.getURL("lastfm.png");
+        imgLastFM.setAttribute('style', 'float: right;');
+        similarArtistsBox.appendChild(imgLastFM);
+
         // Create a title
         var similarTitle = document.createElement('div');
+        similarTitle.setAttribute('style', 'color: #D51007');
         similarTitle.textContent = 'Similar Artists'
         similarTitle.className = 'Expander';
 
         similarArtistsBox.appendChild(similarTitle);
 
-        var imgLFM = document.createElement('img');
-        imgLFM.src = chrome.extension.getURL("lastfm.png");
-        imgLFM.setAttribute('style', 'position: absolute; margin: -3px 0 0 10px; ');
-        similarTitle.appendChild(imgLFM);
-
         // Create the list
         similarArtistList = document.createElement('ul');
         similarArtistList.className = 'new_playlist';  // To facilitate built in rdio hover class on .label li elements
         similarArtistsBox.appendChild(similarArtistList);
+
+        lastFMLink = document.createElement('a');
+        lastFMLink.setAttribute('target', '_top');
+        lastFMLink.setAttribute('style', 'float: right;');
+        lastFMLink.href = 'http://www.last.fm/home';
+        similarArtistsBox.appendChild(lastFMLink);
+
+        // Create the lower lastFM image
+        imgLastFM = document.createElement('img');
+        imgLastFM.src = 'http://cdn.last.fm/flatness/badges/lastfm_red_small.gif';
+        imgLastFM.setAttribute('style', 'float: right; width: 50px;');
+        lastFMLink.appendChild(imgLastFM);
+
+        // Powered by Last.fm
+        var span = document.createElement('span');
+        span.textContent = 'Powered by';
+        span.setAttribute('style', 'float: right; margin-right: 5px; font-size: 0.8em;');
+        lastFMLink.appendChild(span);
 
         // Clear/cancel the init timer/interval
         window.clearInterval(initLoop);
