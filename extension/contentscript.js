@@ -3,7 +3,10 @@ var lastArtist = null,
     playFooter, // = document.querySelector('.App_PlayerFooter');
     nowPlayingArtist, //playFooter.querySelector('artist_title');
     similarArtistList,
-    lastFMLink;
+    lastFMLink,
+    artistTitleElement,
+    artistTitleObserver,  // A window.WebKitMutationObserver to monitor changes to the now playing artist
+    monitorArtistChanges = false;
 
 function lastFMResponse(data) {
     if (data.similarartists.artist) {
@@ -38,8 +41,53 @@ function emptyElement(elem) {
     }
 }
 
+function collapseMonitorPane() {
+    similarArtistList.style.display = 'none';
+    lastFMLink.style.display = 'none';
+
+    // Stop monitoring
+    if (monitorArtistChanges) {
+        artistTitleObserver.disconnect();
+    }
+
+    monitorArtistChanges = false;
+}
+
+function expandMonitorPane() {
+    similarArtistList.style.display = 'block';
+    lastFMLink.style.display = 'inline';
+
+    // Start monitoring changes to '.artist_title' watching for 'childList' changes and firing pollNowPlaying when they occur
+    artistTitleObserver.observe(artistTitleElement, { childList: true });
+
+    monitorArtistChanges = true;
+
+    // Perform an immediate query
+    pollNowPlaying();
+}
+
+// Click handler for artistTitleElement
+function toggleMonitorPane() {
+    if (monitorArtistChanges)
+        collapseMonitorPane();
+    else
+        expandMonitorPane();
+}
+
 // Called via setInterval - checks for artist change: consider dom mutation event
 function pollNowPlaying() {
+
+    // if the tab is not active or chrome is minimized and this update function is called 
+    // then we should toggle into inactive mode, collapse the results 
+    // and skip future last.fm lookups until the user again expands the monitoring pane
+    // TODO: consider adding pin button to control this behavior and toggle autoUpdate; would autocollapse otherwise
+    if (document.webkitHidden) {
+        collapseMonitorPane();
+    }
+
+    // Exit monitoring is not applicable, exit
+    if (!monitorArtistChanges) return;
+
     var currentArtist = nowPlayingArtist.innerText;
     if (currentArtist && lastArtist != currentArtist) {
         chrome.extension.sendRequest({ 'action': 'fetchSimilarArtists', 'artist': currentArtist }, lastFMResponse);
@@ -91,15 +139,16 @@ var initLoop = window.setInterval(function (e) {
 
         // Create a title
         var similarTitle = document.createElement('div');
-        similarTitle.setAttribute('style', 'color: #D51007');
+        similarTitle.setAttribute('style', 'color: #D51007; margin: 3px 0');
         similarTitle.textContent = 'Similar Artists'
         similarTitle.className = 'Expander';
+        similarTitle.addEventListener('click', toggleMonitorPane, false);
 
         similarArtistsBox.appendChild(similarTitle);
 
-        // Create the list
+        // Create the artists list
         similarArtistList = document.createElement('ul');
-        similarArtistList.className = 'new_playlist';  // To facilitate built in rdio hover class on .label li elements
+        similarArtistList.className = 'new_playlist';        // Awkward To facilitate built in rdio hover class on .label li elements
         similarArtistsBox.appendChild(similarArtistList);
 
         lastFMLink = document.createElement('a');
@@ -120,16 +169,17 @@ var initLoop = window.setInterval(function (e) {
         span.setAttribute('style', 'float: right; margin-right: 5px; font-size: 0.8em;');
         lastFMLink.appendChild(span);
 
+        // We'll monitor changes to this element to determine if the now playing artist has changed
+        artistTitleElement = playFooter.querySelector('.artist_title');
+
         // Clear/cancel the init timer/interval
         window.clearInterval(initLoop);
 
-        // Observe 'childList' changes to '.song_title' and fire pollNowPlaying 
-        var target = playFooter.querySelector('.song_title');
+        // MutationObserver to fire pollNowPlaying when changes occur. Observer is connected when monitor pane is expanded
         var JsMutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-        var observer = new JsMutationObserver(pollNowPlaying);
-        observer.observe(target, { childList: true });
+        artistTitleObserver = new JsMutationObserver(pollNowPlaying);
 
-        // Perform initial artist check
-        pollNowPlaying();
+        // Initially set to inactive
+        collapseMonitorPane();
     }
 }, 1000);
