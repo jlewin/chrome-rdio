@@ -14,7 +14,7 @@ function fetchSimilarArtists(requestData, callback) {
 
     // Note that any URL fetched here must be matched by a permission in
     // the manifest.json file!
-    var url = 'http://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=' + escape(requestData.artist) + '&api_key=4c6dce6315e517eaf98156d530f3fdcf&format=json&limit=10';
+    var url = 'http://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=' + escape(requestData.artist) + '&api_key=b244274f9b3d6174afedaed62cb04da4&format=json&limit=10';
     xhr.open('GET', url, true);
     xhr.send();
 };
