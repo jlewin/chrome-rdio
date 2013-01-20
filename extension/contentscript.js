@@ -8,12 +8,11 @@ var lastArtist = null,
 function lastFMResponse(data) {
     if (data.similarartists.artist) {
 
-        // Empty 'ul'
-        while (similarArtistList.hasChildNodes()) {
-            similarArtistList.removeChild(similarArtistList.firstChild);
-        }
+        // Empty similar artists list
+        emptyElement(similarArtistList);
 
         // Add the first 15 similar artists
+        // TODO: Consider adding paging support rather than truncating to a fixed value
         for (var i = 0; i < 15; i++) {
             if (data.similarartists.artist[i]) {
 
@@ -32,6 +31,13 @@ function lastFMResponse(data) {
         }
     }
 };
+
+// http://jsperf.com/innerhtml-vs-removechild
+function emptyElement(elem) {
+    while (elem.lastChild) {
+        elem.removeChild(elem.lastChild);
+    }
+}
 
 function searchForArtist(item) {
     document.getElementById('searchInput').value = this.textContent;
@@ -91,7 +97,6 @@ var initLoop = window.setInterval(function (e) {
         imgLFM.src = chrome.extension.getURL("lastfm.png");
         imgLFM.setAttribute('style', 'position: absolute; margin: -3px 0 0 10px; ');
         similarTitle.appendChild(imgLFM);
-
 
         // Create the list
         similarArtistList = document.createElement('ul');
