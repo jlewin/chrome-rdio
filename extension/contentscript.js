@@ -2,7 +2,6 @@
 var lastArtist = null,
     playFooter, // = document.querySelector('.App_PlayerFooter');
     nowPlayingArtist, //playFooter.querySelector('artist_title');
-    nowPlayingLoop,
     similarArtistList;
 
 function lastFMResponse(data) {
@@ -100,6 +99,13 @@ var initLoop = window.setInterval(function (e) {
         // Clear/cancel the init timer/interval
         window.clearInterval(initLoop);
 
-        nowPlayingLoop = window.setInterval(pollNowPlaying, 1000);
+        // Observe 'childList' changes to '.song_title' and fire pollNowPlaying 
+        var target = playFooter.querySelector('.song_title');
+        var JsMutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+        var observer = new JsMutationObserver(pollNowPlaying);
+        observer.observe(target, { childList: true });
+
+        // Perform initial artist check
+        pollNowPlaying();
     }
 }, 1000);
