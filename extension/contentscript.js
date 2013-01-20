@@ -24,7 +24,6 @@ function lastFMResponse(data) {
                 artistName.setAttribute('href', 'http://www.rdio.com/search/' + data.similarartists.artist[i].name);
 
                 artistName.textContent = data.similarartists.artist[i].name;
-                //artistName.addEventListener("click", searchForArtist, false);
 
                 similarArtistList.appendChild(listItem);
             }
@@ -37,11 +36,6 @@ function emptyElement(elem) {
     while (elem.lastChild) {
         elem.removeChild(elem.lastChild);
     }
-}
-
-function searchForArtist(item) {
-    document.getElementById('searchInput').value = this.textContent;
-    document.getElementById('searchButton').click();
 }
 
 // Called via setInterval - checks for artist change: consider dom mutation event
